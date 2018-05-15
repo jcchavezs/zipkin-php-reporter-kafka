@@ -1,0 +1,35 @@
+{
+    "name": "jcchavezs/zipkin-reporter-kafka",
+    "type": "library",
+    "require": {
+        "nmred/kafka-php": "v0.2.0.8",
+        "jcchavezs/zipkin": "^1.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~5.7.19",
+        "squizlabs/php_codesniffer": "3.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "ZipkinReporterKafka\\": "./src/ZipkinReporterKafka/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ZipkinReporterKafka\\Tests\\": "./tests/"
+        }
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "José Carlos Chávez",
+            "email": "jcchavezs@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "scripts": {
+        "test": "./vendor/bin/phpunit tests",
+        "lint": "./vendor/bin/phpcs --standard=ZEND --standard=PSR2 --ignore=*/vendor/* ./",
+        "fix-lint": "./vendor/bin/phpcbf --standard=ZEND --standard=PSR2 --ignore=*/vendor/* ./"
+    }
+}
