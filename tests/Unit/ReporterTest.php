@@ -18,9 +18,10 @@ final class ReporterTest extends \PHPUnit_Framework_TestCase
     {
         $producer = $this->prophesize(Producer::class);
         $producer->send(Argument::that(function ($spans) {
+            $value = json_decode($spans[0]['value'], true);
             return $spans[0]['topic'] === 'zipkin'
-                && $spans[0]['value']['traceId'] = self::TRACE_ID
-                && $spans[0]['value']['parentSpanId'] = self::SPAN_ID;
+                && $value['traceId'] === self::TRACE_ID
+                && $value['parentId'] === self::SPAN_ID;
         }))->shouldBeCalled();
 
         $reporter = new Reporter($producer->reveal());
