@@ -2,8 +2,8 @@
 
 namespace ZipkinReporterKafka;
 
+use Exception;
 use Kafka\ProducerConfig;
-use RuntimeException;
 use Zipkin\Recording\Span as MutableSpan;
 use Zipkin\Reporter as ZipkinReporter;
 use Kafka\Producer;
@@ -35,7 +35,11 @@ final class Reporter implements ZipkinReporter
         $kConfig = ProducerConfig::getInstance();
         $kConfig->setMetadataBrokerList($config['broker_list']);
 
-        $this->producer = $producer ?: new Producer();
+        try {
+            $this->producer = $producer ?: new Producer();
+        } catch (Exception $e) {
+            $this->producer = new NoopProducer();
+        }
 
         if (!empty($brokerList)) {
             ProducerConfig::getInstance()->setMetadataBrokerList($brokerList);
@@ -66,7 +70,7 @@ final class Reporter implements ZipkinReporter
             if (!$this->producer->send($messages)) {
                 $this->reportMetrics->incrementSpansDropped(count($spans));
             }
-        } catch (RuntimeException $e) {
+        } catch (Exception $e) {
             $this->reportMetrics->incrementSpansDropped(count($spans));
             $this->reportMetrics->incrementMessagesDropped($e);
         }
