@@ -3,10 +3,10 @@
 namespace ZipkinReporterKafka;
 
 use Exception;
-use Kafka\ProducerConfig;
-use Zipkin\Recording\Span as MutableSpan;
-use Zipkin\Reporter as ZipkinReporter;
 use Kafka\Producer;
+use Kafka\ProducerConfig;
+use Zipkin\Recording\Span;
+use Zipkin\Reporter as ZipkinReporter;
 use Zipkin\Reporters\Metrics;
 use Zipkin\Reporters\NoopMetrics;
 
@@ -20,7 +20,7 @@ final class Reporter implements ZipkinReporter
     private $producer;
 
     /**
-     * @var
+     * @var Metrics
      */
     private $reportMetrics;
 
@@ -31,9 +31,8 @@ final class Reporter implements ZipkinReporter
         ];
 
         $brokerList = ProducerConfig::getInstance()->getMetadataBrokerList();
-
-        $kConfig = ProducerConfig::getInstance();
-        $kConfig->setMetadataBrokerList($config['broker_list']);
+        $producerConfig = ProducerConfig::getInstance();
+        $producerConfig->setMetadataBrokerList($config['broker_list']);
 
         try {
             $this->producer = $producer ?: new Producer();
@@ -42,6 +41,8 @@ final class Reporter implements ZipkinReporter
         }
 
         if (!empty($brokerList)) {
+            // If there is no previous broker list there is no way to remove
+            // the previous one
             ProducerConfig::getInstance()->setMetadataBrokerList($brokerList);
         }
 
@@ -49,25 +50,30 @@ final class Reporter implements ZipkinReporter
     }
 
     /**
-     * @param array|MutableSpan[] $spans
+     * @param array|Span[] $spans
      * @return void
      */
     public function report(array $spans)
     {
-        $messages = [];
-
-        foreach ($spans as $span) {
-            $messages[] = [
-                'topic' => self::TOPIC_NAME,
-                'value' => json_encode($span->toArray()),
-            ];
+        if (empty($spans)) {
+            return;
         }
+
+        $message = [
+            'topic' => self::TOPIC_NAME,
+            'value' => json_encode(array_map(
+                function (Span $span) {
+                        return $span->toArray();
+                },
+                $spans
+            )),
+        ];
 
         $this->reportMetrics->incrementSpans(count($spans));
         $this->reportMetrics->incrementMessages();
 
         try {
-            if (!$this->producer->send($messages)) {
+            if (!$this->producer->send([$message])) {
                 $this->reportMetrics->incrementSpansDropped(count($spans));
             }
         } catch (Exception $e) {

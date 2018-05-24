@@ -1,7 +1,10 @@
 {
     "name": "jcchavezs/zipkin-reporter-kafka",
+    "description": "Zipkin Reporter over Kafka transport",
+    "keywords": ["zipkin", "tracing", "openzipkin", "kafka"],
     "type": "library",
     "require": {
+        "php": "^5.6||^7.0",
         "nmred/kafka-php": "v0.2.0.8",
         "jcchavezs/zipkin": "~1.2.2"
     },
